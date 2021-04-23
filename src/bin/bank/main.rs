@@ -1,7 +1,7 @@
-use bank_rust::{AccountService, TestTransactionRepository};
+use bank_rust::{AccountService, transaction::InMemoryRepository};
 
 fn main() {
-    let mut repository = TestTransactionRepository::new();
+    let mut repository = InMemoryRepository::new();
     let mut writer = std::io::stdout();
     let mut account_service = AccountService::new(&mut repository, &mut writer);
 

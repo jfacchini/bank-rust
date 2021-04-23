@@ -1,9 +1,7 @@
-use std::io::{Result as IoResult, Write};
+pub mod transaction;
 
-pub trait TransactionRepository {
-    fn add(&mut self, transaction_amount: isize);
-    fn all(&self) -> &Vec<isize>;
-}
+use std::io::{Write};
+use transaction::TransactionRepository;
 
 pub struct AccountService<'a, 'b, T: TransactionRepository, W: Write> {
     transaction_repository: &'a mut T,
@@ -52,8 +50,9 @@ where
 
 #[cfg(test)]
 mod account_service_tests {
-    use super::*;
     use std::io::{Result as IoResult, Write};
+
+    use super::*;
 
     struct MockOutputWriter {}
     impl MockOutputWriter {
@@ -75,7 +74,7 @@ mod account_service_tests {
     fn it_registers_a_deposit() {
         let expected: Vec<isize> = vec![1000];
 
-        let mut repository = TestTransactionRepository::new();
+        let mut repository = transaction::InMemoryRepository::new();
         let mut writer = MockOutputWriter::new();
 
         let mut account_service = AccountService::new(&mut repository, &mut writer);
@@ -88,62 +87,12 @@ mod account_service_tests {
     fn it_registers_a_withdraw() {
         let expected: Vec<isize> = vec![-1000];
 
-        let mut repository = TestTransactionRepository::new();
+        let mut repository = transaction::InMemoryRepository::new();
         let mut writer = MockOutputWriter::new();
 
         let mut account_service = AccountService::new(&mut repository, &mut writer);
         account_service.withdraw(1000);
 
         assert_eq!(&expected, repository.all());
-    }
-}
-
-pub struct TestTransactionRepository {
-    transactions: Vec<isize>,
-}
-
-impl TestTransactionRepository {
-    pub fn new() -> Self {
-        TestTransactionRepository {
-            transactions: Vec::new(),
-        }
-    }
-}
-
-impl TransactionRepository for TestTransactionRepository {
-    fn add(&mut self, transaction_amount: isize) {
-        self.transactions.push(transaction_amount);
-    }
-
-    fn all(&self) -> &Vec<isize> {
-        &self.transactions
-    }
-}
-
-pub struct OutputWriter {
-    output: String,
-}
-
-impl Write for OutputWriter {
-    fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
-        self.output = format!("{}{}", self.output, String::from_utf8_lossy(buf));
-
-        IoResult::Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> IoResult<()> {
-        IoResult::Ok(())
-    }
-}
-
-impl OutputWriter {
-    pub fn new() -> Self {
-        OutputWriter {
-            output: String::new(),
-        }
-    }
-
-    pub fn output(&self) -> &str {
-        &self.output
     }
 }
