@@ -1,6 +1,6 @@
 pub mod transaction;
 
-use std::io::{Write};
+use std::io::{Write, Result as IoResult};
 use transaction::TransactionRepository;
 
 pub struct AccountService<'a, 'b, T: TransactionRepository, W: Write> {
@@ -30,21 +30,21 @@ where
         self.transaction_repository.add(-(amount as isize));
     }
 
-    pub fn print_statement(&mut self) {
-        self.output_writer
-            .write_all(format!("{}\n", STATEMENT_HEADER).as_bytes()).unwrap();
+    pub fn print_statement(&mut self) -> IoResult<()> {
+        writeln!(self.output_writer, "{}", STATEMENT_HEADER)?;
 
         let mut statement_lines = Vec::new();
         let mut total = 0;
         for transaction in self.transaction_repository.all() {
             total += transaction;
-            statement_lines.push(format!("01/01/2021 | {} | {}\n", transaction, total))
+            statement_lines.push(format!("01/01/2021 | {} | {}", transaction, total))
         }
 
         for line in statement_lines.into_iter().rev() {
-            self.output_writer
-                .write_all(line.as_bytes()).unwrap();
+            writeln!(self.output_writer, "{}", line)?;
         }
+
+        IoResult::Ok(())
     }
 }
 

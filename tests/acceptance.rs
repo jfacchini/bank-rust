@@ -44,7 +44,7 @@ fn it_prints_a_bank_statement() {
     account_service.deposit(1000);
     account_service.deposit(2000);
     account_service.withdraw(500);
-    account_service.print_statement();
+    account_service.print_statement().unwrap();
 
     assert_eq!(output_writer.output(), statement);
 }

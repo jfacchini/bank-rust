@@ -7,5 +7,5 @@ fn main() {
 
     account_service.deposit(1000);
     account_service.deposit(400);
-    account_service.print_statement();
+    account_service.print_statement().expect("Unable to print statement");
 }
