@@ -1,6 +1,6 @@
 pub mod transaction;
 
-use std::io::{Write, Result as IoResult};
+use std::io::{Result as IoResult, Write};
 use transaction::TransactionRepository;
 
 pub struct AccountService<'a, 'b, T: TransactionRepository, W: Write> {

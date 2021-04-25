@@ -1,5 +1,5 @@
-use bank_rust::{AccountService, transaction};
-use std::io::{Write, Result as IoResult};
+use bank_rust::{transaction, AccountService};
+use std::io::{Result as IoResult, Write};
 
 pub struct OutputWriter {
     output: String,
@@ -39,8 +39,7 @@ fn it_prints_a_bank_statement() {
     let mut output_writer = OutputWriter::new();
     let mut test_repository = transaction::InMemoryRepository::new();
 
-    let mut account_service =
-        AccountService::new(&mut test_repository, &mut output_writer);
+    let mut account_service = AccountService::new(&mut test_repository, &mut output_writer);
     account_service.deposit(1000);
     account_service.deposit(2000);
     account_service.withdraw(500);

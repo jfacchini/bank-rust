@@ -1,4 +1,4 @@
-use bank_rust::{AccountService, transaction::InMemoryRepository};
+use bank_rust::{transaction::InMemoryRepository, AccountService};
 
 fn main() {
     let mut repository = InMemoryRepository::new();
@@ -7,5 +7,7 @@ fn main() {
 
     account_service.deposit(1000);
     account_service.deposit(400);
-    account_service.print_statement().expect("Unable to print statement");
+    account_service
+        .print_statement()
+        .expect("Unable to print statement");
 }
