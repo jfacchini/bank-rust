@@ -1,33 +1,45 @@
+pub mod clock;
 pub mod transaction;
 
+use crate::clock::Clock;
+use crate::transaction::Transaction;
 use std::io::{Result as IoResult, Write};
 use transaction::TransactionRepository;
 
-pub struct AccountService<T: TransactionRepository, W: Write> {
+pub struct AccountService<T: TransactionRepository, W: Write, C: Clock> {
     transaction_repository: T,
     output_writer: W,
+    clock: C,
 }
 
 const STATEMENT_HEADER: &str = "Date | Amount | Balance";
 
-impl<T, W> AccountService<T, W>
+impl<T, W, C> AccountService<T, W, C>
 where
     T: TransactionRepository,
     W: Write,
+    C: Clock,
 {
-    pub fn new(repository: T, writer: W) -> Self {
+    pub fn new(repository: T, writer: W, clock: C) -> Self {
         AccountService {
             transaction_repository: repository,
             output_writer: writer,
+            clock,
         }
     }
 
     pub fn deposit(&mut self, amount: usize) {
-        self.transaction_repository.add(amount as isize);
+        self.transaction_repository.add(Transaction {
+            amount: amount as isize,
+            date: self.clock.now(),
+        });
     }
 
     pub fn withdraw(&mut self, amount: usize) {
-        self.transaction_repository.add(-(amount as isize));
+        self.transaction_repository.add(Transaction {
+            amount: -(amount as isize),
+            date: self.clock.now(),
+        });
     }
 
     pub fn print_statement(&mut self) -> IoResult<()> {
@@ -36,8 +48,13 @@ where
         let mut statement_lines = Vec::new();
         let mut total = 0;
         for transaction in self.transaction_repository.all() {
-            total += transaction;
-            statement_lines.push(format!("01/01/2021 | {} | {}", transaction, total))
+            total += transaction.amount;
+            statement_lines.push(format!(
+                "{} | {} | {}",
+                transaction.date.format("%d/%m/%Y").to_string(),
+                transaction.amount,
+                total
+            ))
         }
 
         for line in statement_lines.into_iter().rev() {
@@ -53,8 +70,9 @@ mod account_service_tests {
     use std::io::{Result as IoResult, Write};
 
     use super::*;
+    use chrono::{Date, TimeZone, Utc};
 
-    struct MockOutputWriter {}
+    struct MockOutputWriter();
 
     impl MockOutputWriter {
         fn new() -> Self {
@@ -72,13 +90,25 @@ mod account_service_tests {
         }
     }
 
+    struct MockClock;
+
+    impl Clock for MockClock {
+        fn now(&self) -> Date<Utc> {
+            Utc.ymd(2015, 12, 01)
+        }
+    }
+
     #[test]
     fn it_registers_a_deposit() {
-        let expected: Vec<isize> = vec![1000];
+        let expected: Vec<Transaction> = vec![Transaction {
+            amount: 1000,
+            date: Utc.ymd(2015, 12, 01),
+        }];
 
         let mut account_service = AccountService::new(
             transaction::InMemoryRepository::new(),
             MockOutputWriter::new(),
+            MockClock,
         );
         account_service.deposit(1000);
 
@@ -88,11 +118,15 @@ mod account_service_tests {
 
     #[test]
     fn it_registers_a_withdraw() {
-        let expected: Vec<isize> = vec![-1000];
+        let expected: Vec<Transaction> = vec![Transaction {
+            amount: -1000,
+            date: Utc.ymd(2015, 12, 01),
+        }];
 
         let mut account_service = AccountService::new(
             transaction::InMemoryRepository::new(),
             MockOutputWriter::new(),
+            MockClock,
         );
         account_service.withdraw(1000);
 

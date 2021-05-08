@@ -1,10 +1,18 @@
+use chrono::{Utc, Date};
+
+#[derive(PartialEq, Debug)]
+pub struct Transaction {
+    pub amount: isize,
+    pub date: Date<Utc>
+}
+
 pub trait TransactionRepository {
-    fn add(&mut self, transaction_amount: isize);
-    fn all(&self) -> &Vec<isize>;
+    fn add(&mut self, transaction: Transaction);
+    fn all(&self) -> &Vec<Transaction>;
 }
 
 pub struct InMemoryRepository {
-    transactions: Vec<isize>,
+    transactions: Vec<Transaction>,
 }
 
 impl InMemoryRepository {
@@ -16,11 +24,11 @@ impl InMemoryRepository {
 }
 
 impl TransactionRepository for InMemoryRepository {
-    fn add(&mut self, transaction_amount: isize) {
-        self.transactions.push(transaction_amount);
+    fn add(&mut self, transaction: Transaction) {
+        self.transactions.push(transaction);
     }
 
-    fn all(&self) -> &Vec<isize> {
+    fn all(&self) -> &Vec<Transaction> {
         &self.transactions
     }
 }
