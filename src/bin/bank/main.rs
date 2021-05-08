@@ -1,9 +1,7 @@
 use bank_rust::{transaction::InMemoryRepository, AccountService};
 
 fn main() {
-    let mut repository = InMemoryRepository::new();
-    let mut writer = std::io::stdout();
-    let mut account_service = AccountService::new(&mut repository, &mut writer);
+    let mut account_service = AccountService::new(InMemoryRepository::new(), std::io::stdout());
 
     account_service.deposit(1000);
     account_service.deposit(400);
