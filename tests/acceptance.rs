@@ -65,11 +65,11 @@ fn it_prints_a_bank_statement() {
     let test_repository = transaction::InMemoryRepository::new();
 
     let mut account_service =
-        AccountService::new(test_repository, &mut output_writer, MockClock::new());
+        AccountService::new(test_repository,  MockClock::new());
     account_service.deposit(1000);
     account_service.deposit(2000);
     account_service.withdraw(500);
-    account_service.print_statement().unwrap();
+    account_service.print_statement(&mut output_writer).unwrap();
 
     assert_eq!(output_writer.output(), statement);
 }
